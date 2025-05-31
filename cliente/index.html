@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agendamento - Barbearia Premium</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <img src="../img/logo.png?height=80&width=80" alt="Logo" />
+        <p>Agende seu horário com facilidade</p>
+      </header>
+
+      <div class="booking-form">
+        <!-- Etapa 1: Dados do Cliente -->
+        <div class="step active" id="step-1">
+          <h2>Seus Dados</h2>
+          <div class="form-group">
+            <label for="clientName">Nome Completo</label>
+            <input
+              type="text"
+              id="clientName"
+              placeholder="Digite seu nome completo"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="clientPhone">WhatsApp</label>
+            <input
+              type="tel"
+              id="clientPhone"
+              placeholder="(11) 99999-9999"
+              required
+            />
+          </div>
+          <button class="btn-next" onclick="nextStep(1)">Continuar</button>
+        </div>
+
+        <!-- Etapa 2: Escolha do Profissional -->
+        <div class="step" id="step-2">
+          <h2>Escolha o Profissional</h2>
+          <div class="professionals-grid">
+            <div class="professional-card" data-professional="Carlos Silva">
+              <img
+                src="/img/Carlos_silva.png?height=80&width=80"
+                alt="Carlos Silva"
+              />
+              <h3>Carlos Silva</h3>
+              <p>Especialista em cortes clássicos</p>
+              <span class="experience">5 anos de experiência</span>
+            </div>
+            <div class="professional-card" data-professional="João Santos">
+              <img
+                src="/img/João_santos.png?height=80&width=80"
+                alt="João Santos"
+              />
+              <h3>João Santos</h3>
+              <p>Expert em barbas e bigodes</p>
+              <span class="experience">8 anos de experiência</span>
+            </div>
+            <div class="professional-card" data-professional="Pedro Costa">
+              <img
+                src="/img/Pedro_costa.png?height=80&width=80"
+                alt="Pedro Costa"
+              />
+              <h3>Pedro Costa</h3>
+              <p>Cortes modernos e estilosos</p>
+              <span class="experience">3 anos de experiência</span>
+            </div>
+          </div>
+          <div class="step-buttons">
+            <button class="btn-back" onclick="prevStep(2)">Voltar</button>
+            <button class="btn-next" onclick="nextStep(2)" disabled>
+              Continuar
+            </button>
+          </div>
+        </div>
+
+        <!-- Etapa 3: Escolha do Serviço -->
+        <div class="step" id="step-3">
+          <h2>Escolha o Serviço</h2>
+          <div class="services-grid">
+            <div
+              class="service-card"
+              data-service="Corte de Cabelo"
+              data-price="30"
+            >
+              <h3>Corte de Cabelo</h3>
+              <p>Corte personalizado com acabamento</p>
+              <span class="price">R$ 30,00</span>
+            </div>
+            <div class="service-card" data-service="Barba" data-price="25">
+              <h3>Barba</h3>
+              <p>Aparar e modelar a barba</p>
+              <span class="price">R$ 25,00</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="Corte + Barba"
+              data-price="50"
+            >
+              <h3>Corte + Barba</h3>
+              <p>Combo completo com desconto</p>
+              <span class="price">R$ 50,00</span>
+              <span class="discount">Economize R$ 5,00</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="Sobrancelha"
+              data-price="15"
+            >
+              <h3>Sobrancelha</h3>
+              <p>Modelagem e aparar sobrancelhas</p>
+              <span class="price">R$ 15,00</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="Pacote Completo"
+              data-price="70"
+            >
+              <h3>Pacote Completo</h3>
+              <p>Corte + Barba + Sobrancelha</p>
+              <span class="price">R$ 70,00</span>
+              <span class="discount">Economize R$ 20,00</span>
+            </div>
+          </div>
+          <div class="step-buttons">
+            <button class="btn-back" onclick="prevStep(3)">Voltar</button>
+            <button class="btn-next" onclick="nextStep(3)" disabled>
+              Continuar
+            </button>
+          </div>
+        </div>
+
+        <!-- Etapa 4: Data e Horário -->
+        <div class="step" id="step-4">
+          <h2>Data e Horário</h2>
+          <div class="datetime-container">
+            <div class="date-selection">
+              <label for="appointmentDate">Escolha a Data</label>
+              <input type="date" id="appointmentDate" min="" />
+            </div>
+            <div class="time-selection">
+              <label>Horários Disponíveis</label>
+              <div class="time-slots" id="timeSlots">
+                <!-- Horários serão gerados dinamicamente -->
+              </div>
+            </div>
+          </div>
+          <div class="step-buttons">
+            <button class="btn-back" onclick="prevStep(4)">Voltar</button>
+            <button class="btn-next" onclick="nextStep(4)" disabled>
+              Continuar
+            </button>
+          </div>
+        </div>
+
+        <!-- Etapa 5: Confirmação -->
+        <div class="step" id="step-5">
+          <h2>Confirmação do Agendamento</h2>
+          <div class="summary-card">
+            <h3>Resumo do Agendamento</h3>
+            <div class="summary-item">
+              <span class="label">Cliente:</span>
+              <span class="value" id="summaryName"></span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Profissional:</span>
+              <span class="value" id="summaryProfessional"></span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Serviço:</span>
+              <span class="value" id="summaryService"></span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Data:</span>
+              <span class="value" id="summaryDate"></span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Horário:</span>
+              <span class="value" id="summaryTime"></span>
+            </div>
+            <div class="summary-item total">
+              <span class="label">Valor Total:</span>
+              <span class="value" id="summaryPrice"></span>
+            </div>
+          </div>
+          <div class="step-buttons">
+            <button class="btn-back" onclick="prevStep(5)">Voltar</button>
+            <button class="btn-confirm" onclick="confirmarAgendamento()">
+              Confirmar via WhatsApp
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <div class="step-indicators">
+        <span class="indicator active">1</span>
+        <span class="indicator">2</span>
+        <span class="indicator">3</span>
+        <span class="indicator">4</span>
+        <span class="indicator">5</span>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "agendamentos": [
+    {
+      "nome": "francisco jose",
+      "telefone": "(85) 99904-2698",
+      "profissional": "Carlos Silva",
+      "servico": "Sobrancelha",
+      "data": "2025-05-30",
+      "horario": "11:30",
+      "preco": 15,
+      "id": 1748633141138,
+      "status": "cancelado",
+      "createdAt": "2025-05-30T19:25:41.138Z"
+    },
+    {
+      "nome": "francisco jose",
+      "telefone": "(85) 99904-2698",
+      "profissional": "Carlos Silva",
+      "servico": "Pacote Completo",
+      "data": "2025-05-30",
+      "horario": "18:00",
+      "preco": 70,
+      "id": 1748633292621,
+      "status": "cancelado",
+      "createdAt": "2025-05-30T19:28:12.621Z"
+    }
+  ]
+}
