@@ -42,7 +42,12 @@
     <div id="loginScreen" class="login-screen">
       <div class="login-container">
         <div class="login-header">
-          <h1>🪒 Barbearia Premium</h1>
+          <img
+            class="logo"
+            src="../img/logo.png?height=50&width=50"
+            alt="Logo
+          da Barbearia Premium"
+          />
           <h2>Painel Administrativo</h2>
         </div>
         <form id="loginForm" class="login-form">
@@ -80,8 +85,12 @@
       <!-- Header -->
       <header class="admin-header">
         <div class="header-left">
-          <h1>🪒 Barbearia Premium</h1>
-          <span class="admin-subtitle">Painel Administrativo</span>
+          <img
+            class="logo"
+            src="../img/logo.png?"
+            alt="Logo
+          da Barbearia Premium"
+          />
         </div>
         <div class="header-right">
           <div class="notifications-bell" id="notificationsBell">
@@ -129,6 +138,7 @@
             <h2>Dashboard</h2>
             <div class="date-filter">
               <select id="dashboardPeriod">
+                <option value="all">Todas as Datas</option>
                 <option value="today">Hoje</option>
                 <option value="week">Esta Semana</option>
                 <option value="month">Este Mês</option>
@@ -138,28 +148,36 @@
 
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon">📅</div>
+              <div class="stat-icon">
+                <img src="/img/icon_calendario.png" alt="Agendamentos" />
+              </div>
               <div class="stat-content">
                 <h3 id="totalAppointments">0</h3>
                 <p>Agendamentos</p>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">💰</div>
+              <div class="stat-icon">
+                <img src="/img/icon_financeiro.png" alt="Faturamento" />
+              </div>
               <div class="stat-content">
                 <h3 id="totalRevenue">R$ 0</h3>
                 <p>Faturamento</p>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">✅</div>
+              <div class="stat-icon">
+                <img src="/img/icon_list.png" alt="Atendidos" />
+              </div>
               <div class="stat-content">
                 <h3 id="completedAppointments">0</h3>
                 <p>Atendidos</p>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">❌</div>
+              <div class="stat-icon">
+                <img src="/img/icon_cancelado.png" alt="Cancelados" />
+              </div>
               <div class="stat-content">
                 <h3 id="cancelledAppointments">0</h3>
                 <p>Cancelados</p>

@@ -96,37 +96,51 @@ function setupEventListeners() {
 function generateTimeSlots() {
   const selectedDate = document.getElementById("appointmentDate").value;
   const timeSlotsContainer = document.getElementById("timeSlots");
+  const selectedProfessional = bookingData.professional;
 
-  if (!selectedDate) {
-    timeSlotsContainer.innerHTML = "";
+  if (!selectedDate || !selectedProfessional) {
+    timeSlotsContainer.innerHTML = "<p style='color:#888'>Selecione o profissional e a data.</p>";
     return;
   }
 
   bookingData.date = selectedDate;
-  const occupied = occupiedSlots[selectedDate] || [];
+  timeSlotsContainer.innerHTML = "<span style='color:#888'>Carregando horários...</span>";
 
-  timeSlotsContainer.innerHTML = "";
+  // Buscar agendamentos do backend para o profissional e data
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
+    .then((res) => res.json())
+    .then((agendamentos) => {
+      // Filtrar agendamentos do profissional, data e não cancelados
+      const ocupados = agendamentos
+        .filter(
+          (a) =>
+            a.profissional === selectedProfessional &&
+            a.data === selectedDate &&
+            a.status !== "cancelado"
+        )
+        .map((a) => a.horario);
 
-  availableSlots.forEach((slot) => {
-    const slotElement = document.createElement("div");
-    slotElement.className = "time-slot";
-    slotElement.textContent = slot;
+      timeSlotsContainer.innerHTML = "";
+      availableSlots.forEach((slot) => {
+        const slotElement = document.createElement("div");
+        slotElement.className = "time-slot";
+        slotElement.textContent = slot;
 
-    if (occupied.includes(slot)) {
-      slotElement.classList.add("unavailable");
-    } else {
-      slotElement.addEventListener("click", function () {
-        document
-          .querySelectorAll(".time-slot")
-          .forEach((s) => s.classList.remove("selected"));
-        this.classList.add("selected");
-        bookingData.time = slot;
-        enableNextButton(4);
+        if (ocupados.includes(slot)) {
+          slotElement.classList.add("unavailable");
+        } else {
+          slotElement.addEventListener("click", function () {
+            document
+              .querySelectorAll(".time-slot")
+              .forEach((s) => s.classList.remove("selected"));
+            this.classList.add("selected");
+            bookingData.time = slot;
+            enableNextButton(4);
+          });
+        }
+        timeSlotsContainer.appendChild(slotElement);
       });
-    }
-
-    timeSlotsContainer.appendChild(slotElement);
-  });
+    });
 }
 
 function nextStep(step) {
@@ -286,26 +300,45 @@ function confirmarAgendamento() {
     preco: bookingData.price,
   };
 
-  fetch("http://localhost:3000/api/agendamentos", {
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(booking),
   })
     .then((res) => res.json())
     .then((data) => {
-      // Mensagem para o WhatsApp
-      const msg = `Olá, gostaria de confirmar meu agendamento:
-Nome: ${booking.nome}
-Serviço: ${booking.servico}
-Profissional: ${booking.profissional}
-Data: ${formatDate(booking.data)}
-Horário: ${booking.horario}`;
-      const whatsappUrl = `https://wa.me/5511912345678?text=${encodeURIComponent(
-        msg
-      )}`;
-      window.open(whatsappUrl, "_blank");
+      // Mensagem para o WhatsApp do cliente enviada pelo número da barbearia
+      const numeroBarbearia = "5585999042698"; // DDI+DDD+número da barbearia
+      let clienteTelefone = booking.telefone.replace(/\D/g, "");
+      if (clienteTelefone.length === 11) {
+        clienteTelefone = "55" + clienteTelefone;
+      }
+      if (clienteTelefone.length !== 13) {
+        alert("Telefone do cliente inválido para envio de WhatsApp.");
+        return;
+      }
+      const msg = `Seu agendamento foi confirmado!\n\nNome: ${booking.nome}\nServiço: ${booking.servico}\nProfissional: ${booking.profissional}\nData: ${formatDate(booking.data)}\nHorário: ${booking.horario}`;
+      // Exibe feedback visual de sucesso
+      showSuccessMessage();
+      // Após um pequeno delay, abre o WhatsApp
+      setTimeout(() => {
+        const whatsappUrl = `https://wa.me/${clienteTelefone}?text=${encodeURIComponent(msg)}`;
+        window.open(whatsappUrl, "_blank");
+      }, 1200);
     })
     .catch(() => alert("Erro ao agendar!"));
+}
+
+function showSuccessMessage() {
+  const msg = document.getElementById("successMessage");
+  if (msg) msg.style.display = "flex";
+}
+
+function closeSuccessMessage() {
+  const msg = document.getElementById("successMessage");
+  if (msg) msg.style.display = "none";
+  // Opcional: resetar formulário ou redirecionar para início
+  // location.reload();
 }
 
 // Função para simular horários ocupados (em um app real, viria do backend)

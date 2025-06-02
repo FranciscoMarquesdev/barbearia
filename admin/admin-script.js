@@ -131,54 +131,44 @@ function setupFilters() {
 
 // Dashboard
 function loadDashboardData() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
-      const period =
-        document.getElementById("dashboardPeriod")?.value || "today";
-      // Filtra pelo período, mas NÃO remove cancelados ainda
-      const filteredData = filterDataByPeriod(agendamentos, period);
-
+      const period = document.getElementById("dashboardPeriod")?.value || "all";
+      // Considere apenas agendamentos não cancelados
+      let filteredData = agendamentos.filter((a) => a.status !== "cancelado");
+      if (period !== "all") {
+        filteredData = filterDataByPeriod(filteredData, period);
+      }
       // Conta todos os agendamentos não cancelados
-      const totalAppointments = filteredData.filter(
-        (a) => a.status !== "cancelado"
-      ).length;
-
+      const totalAppointments = filteredData.length;
       // Conta todos os atendidos
       const completedAppointments = filteredData.filter(
         (a) => a.status === "completed"
       ).length;
-
-      // Conta todos os cancelados
+      // Conta todos os cancelados (do período original)
       const lidos = JSON.parse(
         localStorage.getItem("cancelamentosLidos") || "[]"
       );
-      const cancelledAppointments = filteredData.filter(
-        (a) => a.status === "cancelado" && !lidos.includes(a.id)
-      ).length;
-
+      const cancelledAppointments = agendamentos
+        .filter((a) => a.status === "cancelado")
+        .filter((a) => {
+          if (period === "all") return !lidos.includes(a.id);
+          return filterDataByPeriod([a], period).length > 0 && !lidos.includes(a.id);
+        }).length;
       // Faturamento só dos não cancelados
-      const totalRevenue = filteredData
-        .filter((a) => a.status !== "cancelado")
-        .reduce((sum, a) => sum + Number(a.preco), 0);
-
-      document.getElementById("totalAppointments").textContent =
-        totalAppointments;
-      document.getElementById("completedAppointments").textContent =
-        completedAppointments;
-      document.getElementById("cancelledAppointments").textContent =
-        cancelledAppointments;
-      document.getElementById(
-        "totalRevenue"
-      ).textContent = `R$ ${totalRevenue.toFixed(2)}`;
-
+      const totalRevenue = filteredData.reduce((sum, a) => sum + Number(a.preco), 0);
+      document.getElementById("totalAppointments").textContent = totalAppointments;
+      document.getElementById("completedAppointments").textContent = completedAppointments;
+      document.getElementById("cancelledAppointments").textContent = cancelledAppointments;
+      document.getElementById("totalRevenue").textContent = `R$ ${totalRevenue.toFixed(2)}`;
       renderRevenueChart(filteredData, period);
     });
 }
 
 // Agendamentos
 function loadAppointmentsData() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       // Filtros
@@ -235,7 +225,7 @@ function loadAppointmentsData() {
 }
 
 function cancelarAgendamento(id) {
-  fetch("http://localhost:3000/api/cancelar", {
+  fetch("https://barbearia-b8hw.onrender.com/api/cancelar", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
@@ -243,7 +233,7 @@ function cancelarAgendamento(id) {
 }
 
 function marcarComoAtendido(id) {
-  fetch("http://localhost:3000/api/atender", {
+  fetch("https://barbearia-b8hw.onrender.com/api/atender", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
@@ -252,7 +242,7 @@ function marcarComoAtendido(id) {
 
 // Cancelamentos
 function loadCancellationsData() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       const cancelled = agendamentos.filter((a) => a.status === "cancelado");
@@ -290,31 +280,18 @@ function renderCancellationsTable(data) {
 // Financeiro
 function loadFinancialData() {
   const period = document.getElementById("financialPeriod")?.value || "today";
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
-      // Filtra cancelados ANTES de filtrar por período
-      const filteredData = filterDataByPeriod(
-        agendamentos.filter((a) => a.status !== "cancelado"),
-        period
-      );
-      const totalRevenue = filteredData.reduce(
-        (sum, apt) => sum + Number(apt.preco),
-        0
-      );
+      // Considere apenas agendamentos não cancelados
+      let filteredData = agendamentos.filter((a) => a.status !== "cancelado");
+      filteredData = filterDataByPeriod(filteredData, period);
+      const totalRevenue = filteredData.reduce((sum, apt) => sum + Number(apt.preco), 0);
       const totalAppointments = filteredData.length;
-      const averageTicket =
-        totalAppointments > 0 ? totalRevenue / totalAppointments : 0;
-
-      document.getElementById(
-        "totalFinancialRevenue"
-      ).textContent = `R$ ${totalRevenue.toFixed(2)}`;
-      document.getElementById("totalFinancialAppointments").textContent =
-        totalAppointments;
-      document.getElementById(
-        "averageTicket"
-      ).textContent = `R$ ${averageTicket.toFixed(2)}`;
-
+      const averageTicket = totalAppointments > 0 ? totalRevenue / totalAppointments : 0;
+      document.getElementById("totalFinancialRevenue").textContent = `R$ ${totalRevenue.toFixed(2)}`;
+      document.getElementById("totalFinancialAppointments").textContent = totalAppointments;
+      document.getElementById("averageTicket").textContent = `R$ ${averageTicket.toFixed(2)}`;
       renderProfessionalRevenueTable(filteredData);
       renderServiceRevenueTable(filteredData);
     });
@@ -329,7 +306,8 @@ function renderProfessionalRevenueTable(data) {
       professionalStats[apt.profissional] = { count: 0, revenue: 0 };
     }
     professionalStats[apt.profissional].count++;
-    professionalStats[apt.profissional].revenue += Number(apt.preco);
+    // Comissão de 40% para o profissional
+    professionalStats[apt.profissional].revenue += Number(apt.preco) * 0.4;
   });
   tbody.innerHTML = "";
   Object.entries(professionalStats).forEach(([professional, stats]) => {
@@ -368,7 +346,7 @@ function renderServiceRevenueTable(data) {
 
 // Notificações (simples: mostra agendamentos recentes)
 function loadNotificationsData() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       const container = document.getElementById("notificationsContainer");
@@ -404,7 +382,7 @@ function loadNotificationsData() {
 }
 
 function updateNotificationCount() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       const countElement = document.getElementById("notificationCount");
@@ -420,7 +398,7 @@ function updateNotificationCount() {
 
 function clearAllNotifications() {
   // Salva os IDs das notificações atuais como "limpas"
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       const ids = agendamentos.map((a) => a.id);
@@ -432,7 +410,7 @@ function clearAllNotifications() {
 }
 
 function clearAllCancellations() {
-  fetch("http://localhost:3000/api/agendamentos")
+  fetch("https://barbearia-b8hw.onrender.com/api/agendamentos")
     .then((res) => res.json())
     .then((agendamentos) => {
       const cancelled = agendamentos.filter((a) => a.status === "cancelado");
@@ -555,6 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Gráfico de Faturamento Semanal
 function renderRevenueChart(data, period) {
   const ctx = document.getElementById("weeklyRevenueChart");
   if (!ctx) return;
@@ -567,6 +546,9 @@ function renderRevenueChart(data, period) {
   let labels = [];
   let values = [];
 
+  // Considere apenas agendamentos não cancelados
+  const validData = data.filter((apt) => apt.status !== "cancelado");
+
   if (period === "today") {
     // Faturamento por hora
     labels = Array.from(
@@ -574,23 +556,19 @@ function renderRevenueChart(data, period) {
       (_, i) => `${i.toString().padStart(2, "0")}:00`
     );
     values = Array(24).fill(0);
-    data.forEach((apt) => {
-      if (apt.status !== "cancelado") {
-        const hora = parseInt(apt.horario.split(":")[0], 10);
-        values[hora] += Number(apt.preco);
-      }
+    validData.forEach((apt) => {
+      const hora = parseInt(apt.horario.split(":")[0], 10);
+      values[hora] += Number(apt.preco);
     });
   } else if (period === "week") {
     // Faturamento por dia da semana
     labels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     values = Array(7).fill(0);
-    data.forEach((apt) => {
-      if (apt.status !== "cancelado") {
-        const [year, month, day] = apt.data.split("-");
-        const date = new Date(Number(year), Number(month) - 1, Number(day));
-        const diaSemana = date.getDay();
-        values[diaSemana] += Number(apt.preco);
-      }
+    validData.forEach((apt) => {
+      const [year, month, day] = apt.data.split("-");
+      const date = new Date(Number(year), Number(month) - 1, Number(day));
+      const diaSemana = date.getDay();
+      values[diaSemana] += Number(apt.preco);
     });
   } else if (period === "month") {
     // Faturamento por dia do mês
@@ -601,12 +579,10 @@ function renderRevenueChart(data, period) {
     ).getDate();
     labels = Array.from({ length: diasNoMes }, (_, i) => (i + 1).toString());
     values = Array(diasNoMes).fill(0);
-    data.forEach((apt) => {
-      if (apt.status !== "cancelado") {
-        const [year, month, day] = apt.data.split("-");
-        const dia = Number(day) - 1;
-        values[dia] += Number(apt.preco);
-      }
+    validData.forEach((apt) => {
+      const [year, month, day] = apt.data.split("-");
+      const dia = Number(day) - 1;
+      values[dia] += Number(apt.preco);
     });
   }
 
@@ -632,6 +608,48 @@ function renderRevenueChart(data, period) {
           ticks: {
             callback: (value) => "R$ " + value,
           },
+        },
+      },
+    },
+  });
+  renderServicesChart(data);
+}
+
+// Gráfico de Serviços Mais Procurados
+function renderServicesChart(data) {
+  const ctx = document.getElementById("servicesChart");
+  if (!ctx) return;
+  if (window.servicesChart) {
+    window.servicesChart.destroy();
+  }
+  // Considere apenas agendamentos não cancelados
+  const validData = data.filter((apt) => apt.status !== "cancelado");
+  const serviceStats = {};
+  validData.forEach((apt) => {
+    if (!serviceStats[apt.servico]) serviceStats[apt.servico] = 0;
+    serviceStats[apt.servico] += 1;
+  });
+  const labels = Object.keys(serviceStats);
+  const values = Object.values(serviceStats);
+  window.servicesChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Quantidade",
+          data: values,
+          backgroundColor: "rgba(39, 174, 96, 0.7)",
+          borderColor: "rgba(39, 174, 96, 1)",
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
         },
       },
     },

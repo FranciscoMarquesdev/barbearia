@@ -402,6 +402,81 @@ body {
   color: white;
 }
 
+.success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  color: #fff;
+  animation: fadeIn 0.5s;
+}
+
+.success-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  color: #27ae60;
+  animation: pop 0.4s;
+}
+
+.success-message h3 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-family: "Poppins", sans-serif;
+}
+
+.success-message p {
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.success-message .btn-next {
+  background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+  color: #fff;
+  font-size: 1rem;
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.15);
+  transition: background 0.2s;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.success-message .btn-next:hover {
+  background: linear-gradient(90deg, #219150 0%, #27ae60 100%);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.7);
+  }
+  80% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     margin: 10px;
