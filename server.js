@@ -1,13 +1,36 @@
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DB_FILE = "./db.json";
 
-app.use(cors());
+// CORS restrito ao domínio desejado
+app.use(cors({
+  origin: 'https://meusite.com',
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 app.use(bodyParser.json());
+
+// Middleware de autenticação JWT
+function autenticarToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401); // Sem token
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403); // Token inválido
+    req.user = user;
+    next();
+  });
+}
+
+// Aplica autenticação JWT em todas as rotas a partir daqui
+app.use(autenticarToken);
 
 // Função para ler e salvar o "banco de dados" (JSON)
 function readDB() {
@@ -78,5 +101,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
