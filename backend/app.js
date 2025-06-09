@@ -1,12 +1,19 @@
 const express = require("express");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const csrf = require("csurf");
 const rateLimit = require("express-rate-limit");
+const cors = require("cors");
 const appointmentsRouter = require("./routes/appointments");
 
 const app = express();
 
+app.use(
+  cors({
+    origin: "https://meusite.com", // ajuste para seu domínio real
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -3,23 +3,8 @@ const router = express.Router();
 const Joi = require("joi");
 const { body, validationResult } = require("express-validator");
 const sanitizeHtml = require("sanitize-html");
-const jwt = require("jsonwebtoken");
 const Appointment = require("../models/Appointment");
-
-// Middleware de autenticação JWT
-function authenticateJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) return res.sendStatus(403);
-      req.user = user;
-      next();
-    });
-  } else {
-    res.sendStatus(401);
-  }
-}
+const autenticarToken = require("../middleware/auth");
 
 // Esquema Joi para validação extra
 const appointmentSchema = Joi.object({
@@ -28,41 +13,37 @@ const appointmentSchema = Joi.object({
   professional: Joi.string().max(100).required(),
   date: Joi.date().iso().required(),
   value: Joi.number().min(0).required(),
+  phone: Joi.string().max(20).optional(),
 });
 
-// POST /api/appointments
+// Criar agendamento (usuário comum pode criar)
 router.post(
   "/",
-  authenticateJWT,
+  autenticarToken(["user", "admin"]),
   body("clientName").trim().escape(),
   body("service").trim().escape(),
   body("professional").trim().escape(),
   body("date").isISO8601(),
   body("value").isFloat({ min: 0 }),
+  body("phone").optional().trim().escape(),
   async (req, res) => {
-    // express-validator: checagem de erros
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-
-    // sanitize-html: sanitização extra
     const sanitizedBody = {
       clientName: sanitizeHtml(req.body.clientName),
       service: sanitizeHtml(req.body.service),
       professional: sanitizeHtml(req.body.professional),
       date: req.body.date,
       value: req.body.value,
+      phone: req.body.phone ? sanitizeHtml(req.body.phone) : undefined,
     };
-
-    // Joi: validação robusta
     const { error } = appointmentSchema.validate(sanitizedBody);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-
     try {
-      // Salva o objeto sanitizado e validado
       const appointment = new Appointment(sanitizedBody);
       await appointment.save();
       res.status(201).json({ message: "Agendamento criado com sucesso." });
@@ -71,5 +52,16 @@ router.post(
     }
   }
 );
+
+// Listar agendamentos (apenas admin pode ver dados sensíveis)
+router.get("/", autenticarToken(["admin"]), async (req, res) => {
+  try {
+    const appointments = await Appointment.find().select("-__v");
+    // Remover dados sensíveis se não for admin (mas aqui só admin acessa)
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar agendamentos." });
+  }
+});
 
 module.exports = router;
