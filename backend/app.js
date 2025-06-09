@@ -35,7 +35,8 @@ app.use(
 );
 
 // CSRF protection global (ajuste para APIs se necessário)
-app.use(csrf({ cookie: true }));
+// Remova ou comente esta linha para APIs JWT
+// app.use(csrf({ cookie: true }));
 
 // Forçar HTTPS (em produção)
 app.use((req, res, next) => {
