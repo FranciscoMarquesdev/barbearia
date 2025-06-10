@@ -52,7 +52,7 @@ Você pode visualizar o site de exemplo no seguinte link:
 1. **Clone o Repositório**
 
    ```bash
-   git clone https://github.com/FranciscoMarquesdev/projetonissan.git
+   (https://github.com/FranciscoMarquesdev/barbearia.git)
    ```
 
 2. **Abra no seu editor de código favorito (VS Code, Sublime, etc.).**
