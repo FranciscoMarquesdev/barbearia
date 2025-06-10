@@ -18,7 +18,7 @@ Programa exclusivo e gratuito.
 <br>
 
 <p align="center">
-  <img alt="projeto Nissan" src=".github/preview.jpg.png" width="100%">
+  <img alt="projeto Nissan" src="barbearia.png" width="100%">
 </p>
 
 # Sistema de Agendamento para Barbearia
@@ -30,7 +30,7 @@ Este projeto foi desenvolvido para facilitar a gestão de horários e clientes e
 
 Você pode visualizar o site de exemplo no seguinte link:
 
-👉 [Visualizar Site Exemplo](https://franciscomarquesdev.github.io/projetonissan/)
+👉 [Visualizar Site Exemplo](https://barbearia-gg.netlify.app/cliente/index.html)
 
 ## ✂️ Funcionalidades
 
