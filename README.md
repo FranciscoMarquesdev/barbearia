@@ -18,7 +18,7 @@ Programa exclusivo e gratuito.
 <br>
 
 <p align="center">
-  <img alt="projeto Nissan" src="barbearia.png" width="100%">
+  <img alt="Agendamento para Barbearia" src="barbearia.png" width="100%">
 </p>
 
 # Sistema de Agendamento para Barbearia
