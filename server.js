@@ -9,17 +9,19 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = "./db.json";
 
 // CORS restrito ao domínio desejado
-app.use(cors({
-  origin: 'https://meusite.com',
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "https://barbearia-gg.netlify.app",
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 app.use(bodyParser.json());
 
 // Middleware de autenticação JWT
 function autenticarToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
   if (!token) return res.sendStatus(401); // Sem token
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -103,7 +105,9 @@ app.listen(PORT, () => {
 });
 
 // Token para testes (não deve ficar no código em produção)
-const token = jwt.sign({ id: 1, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '1h' });
+const token = jwt.sign({ id: 1, role: "admin" }, process.env.JWT_SECRET, {
+  expiresIn: "1h",
+});
 console.log(`Token de acesso: ${token}`);
 
 // Exemplo de como deve ser o cabeçalho da requisição
