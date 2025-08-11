@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require("joi");
 const { body, validationResult } = require("express-validator");
 const sanitizeHtml = require("sanitize-html");
-const Appointment = require("../models/Appointment");
+const pool = require("../db/mysql");
 const autenticarToken = require("../middleware/auth");
 
 // Esquema Joi para validação extra
@@ -37,16 +37,27 @@ router.post(
       professional: sanitizeHtml(req.body.professional),
       date: req.body.date,
       value: req.body.value,
-      phone: req.body.phone ? sanitizeHtml(req.body.phone) : undefined,
+      phone: req.body.phone ? sanitizeHtml(req.body.phone) : null,
     };
     const { error } = appointmentSchema.validate(sanitizedBody);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
     try {
-      const appointment = new Appointment(sanitizedBody);
-      await appointment.save();
-      res.status(201).json({ message: "Agendamento criado com sucesso." });
+      const [result] = await pool.query(
+        `INSERT INTO agendamentos (nome, telefone, profissional, servico, data, horario, preco, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sanitizedBody.clientName,
+          sanitizedBody.phone,
+          sanitizedBody.professional,
+          sanitizedBody.service,
+          sanitizedBody.date,
+          req.body.time || "", // Adapte se necessário
+          sanitizedBody.value,
+          "confirmado"
+        ]
+      );
+      res.status(201).json({ message: "Agendamento criado com sucesso.", id: result.insertId });
     } catch (err) {
       res.status(500).json({ error: "Erro ao criar agendamento." });
     }
@@ -56,8 +67,7 @@ router.post(
 // Listar agendamentos (apenas admin pode ver dados sensíveis)
 router.get("/", autenticarToken(["admin"]), async (req, res) => {
   try {
-    const appointments = await Appointment.find().select("-__v");
-    // Remover dados sensíveis se não for admin (mas aqui só admin acessa)
+    const [appointments] = await pool.query("SELECT * FROM agendamentos ORDER BY createdAt DESC");
     res.json(appointments);
   } catch (err) {
     res.status(500).json({ error: "Erro ao buscar agendamentos." });

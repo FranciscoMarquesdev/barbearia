@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const fs = require("fs");
+const pool = require("./backend/db/mysql");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
@@ -32,16 +32,6 @@ function autenticarToken(req, res, next) {
 // Aplica autenticação JWT em todas as rotas a partir daqui
 app.use(autenticarToken);
 
-// Função para ler e salvar o "banco de dados" (JSON)
-function readDB() {
-  if (!fs.existsSync(DB_FILE))
-    fs.writeFileSync(DB_FILE, JSON.stringify({ agendamentos: [] }, null, 2));
-  return JSON.parse(fs.readFileSync(DB_FILE));
-}
-function writeDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
 // Rota para criar um novo agendamento
 app.post("/api/agendamentos", (req, res) => {
   const db = readDB();
@@ -63,30 +53,38 @@ app.get("/api/agendamentos", (req, res) => {
 });
 
 // Rota para cancelar um agendamento
-app.post("/api/cancelar", (req, res) => {
-  const db = readDB();
+app.post("/api/cancelar", async (req, res) => {
   const { id } = req.body;
-  const agendamento = db.agendamentos.find((a) => a.id === id);
-  if (agendamento) {
-    agendamento.status = "cancelado";
-    writeDB(db);
-    res.json({ ok: true });
-  } else {
-    res.status(404).json({ error: "Agendamento não encontrado" });
+  try {
+    const [result] = await pool.query(
+      "UPDATE agendamentos SET status = 'cancelado' WHERE id = ?",
+      [id]
+    );
+    if (result.affectedRows > 0) {
+      res.json({ ok: true });
+    } else {
+      res.status(404).json({ error: "Agendamento não encontrado" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao cancelar agendamento." });
   }
 });
 
 // Rota para atender um agendamento
-app.post("/api/atender", (req, res) => {
+app.post("/api/atender", async (req, res) => {
   const { id } = req.body;
-  const db = readDB();
-  const agendamento = db.agendamentos.find((a) => String(a.id) === String(id));
-  if (agendamento) {
-    agendamento.status = "completed";
-    writeDB(db);
-    res.json({ success: true });
-  } else {
-    res.status(404).json({ error: "Agendamento não encontrado" });
+  try {
+    const [result] = await pool.query(
+      "UPDATE agendamentos SET status = 'completed' WHERE id = ?",
+      [id]
+    );
+    if (result.affectedRows > 0) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Agendamento não encontrado" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao atender agendamento." });
   }
 });
 
@@ -103,3 +101,10 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Token para testes (não deve ficar no código em produção)
+const token = jwt.sign({ id: 1, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '1h' });
+console.log(`Token de acesso: ${token}`);
+
+// Exemplo de como deve ser o cabeçalho da requisição
+// Authorization: Bearer SEU_TOKEN_AQUI
