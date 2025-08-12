@@ -1,5 +1,15 @@
 // Rota para consultar horários disponíveis de um dia
+require("dotenv" ).config();
+const express = require("express");
+const { PrismaClient } = require("./generated/prisma");
+const prisma = new PrismaClient();
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
 const { zonedTimeToUtc, utcToZonedTime, format } = require("date-fns-tz");
+const app = express();
+const PORT = process.env.PORT || 3000;
+// Removido DB_FILE, não usamos mais db.json
 
 // Lista completa de horários de trabalho (exemplo: 09:00 às 18:00)
 const TODOS_HORARIOS = [
@@ -72,13 +82,11 @@ app.get("/api/horarios-disponiveis", async (req, res) => {
 require("dotenv").config();
 const express = require("express");
 const { PrismaClient } = require("./generated/prisma");
-const prisma = new PrismaClient();
+// Removido prisma duplicado
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const jwt = require("jsonwebtoken");
-const app = express();
-const PORT = process.env.PORT || 3000;
 // Removido DB_FILE, não usamos mais db.json
+// Duplicate definitions removed
 
 // CORS restrito ao domínio desejado
 app.use(
