@@ -48,9 +48,13 @@ app.post("/api/agendamentos", (req, res) => {
 });
 
 // Rota para listar todos os agendamentos
-app.get("/api/agendamentos", (req, res) => {
-  const db = readDB();
-  res.json(db.agendamentos);
+app.get("/api/agendamentos", async (req, res) => {
+  try {
+    const [agendamentos] = await pool.query("SELECT * FROM agendamentos ORDER BY createdAt DESC");
+    res.json(agendamentos);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar agendamentos." });
+  }
 });
 
 // Rota para cancelar um agendamento
