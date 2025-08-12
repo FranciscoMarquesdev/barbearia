@@ -60,7 +60,12 @@ app.post("/api/agendamentos", async (req, res) => {
 app.get("/api/agendamentos", async (req, res) => {
   try {
     const agendamentos = await prisma.agendamento.findMany({ orderBy: { createdAt: 'desc' } });
-    res.json(agendamentos);
+    // Formata o campo data para 'YYYY-MM-DD' para compatibilidade com o frontend
+    const agendamentosFormatados = agendamentos.map(a => ({
+      ...a,
+      data: a.data.toISOString().split('T')[0]
+    }));
+    res.json(agendamentosFormatados);
   } catch (err) {
     res.status(500).json({ error: "Erro ao buscar agendamentos." });
   }
