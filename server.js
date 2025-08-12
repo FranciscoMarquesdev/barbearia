@@ -31,8 +31,7 @@ function autenticarToken(req, res, next) {
   });
 }
 
-// Aplica autenticação JWT em todas as rotas a partir daqui
-app.use(autenticarToken);
+// Aplica autenticação JWT apenas nas rotas protegidas
 
 // Rota para criar um novo agendamento
 app.post("/api/agendamentos", (req, res) => {
