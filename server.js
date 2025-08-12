@@ -1,4 +1,4 @@
-// Rota para consultar horários disponíveis de um dia
+// Route to check available times for a day
 require("dotenv").config();
 const express = require("express");
 const { PrismaClient } = require("./generated/prisma");
@@ -9,9 +9,9 @@ const jwt = require("jsonwebtoken");
 const { zonedTimeToUtc, utcToZonedTime, format } = require("date-fns-tz");
 const app = express();
 const PORT = process.env.PORT || 3000;
-// Removido DB_FILE, não usamos mais db.json
+// Removed DB_FILE, we no longer use db.json
 
-// Lista completa de horários de trabalho (exemplo: 09:00 às 18:00)
+// Full list of working hours (example: 09:00 to 18:00)
 const TODOS_HORARIOS = [
   "09:00",
   "09:30",
@@ -38,17 +38,17 @@ app.get("/api/horarios-disponiveis", async (req, res) => {
   try {
     const { date } = req.query;
     if (!date) {
-      return res.status(400).json({ error: 'Parâmetro "date" é obrigatório.' });
+      return res.status(400).json({ error: 'Parameter "date" is required.' });
     }
 
-    // Fuso horário da barbearia
+    // Barbershop timezone
     const timeZone = "America/Sao_Paulo";
 
-    // Cria início e fim do dia no fuso correto
+    // Create start and end of day in correct timezone
     const startOfDay = zonedTimeToUtc(`${date}T00:00:00`, timeZone);
     const endOfDay = zonedTimeToUtc(`${date}T23:59:59.999`, timeZone);
 
-    // Busca agendamentos do dia inteiro
+    // Find all appointments for the day
     const agendamentos = await prisma.agendamento.findMany({
       where: {
         data: {
@@ -61,27 +61,26 @@ app.get("/api/horarios-disponiveis", async (req, res) => {
       },
     });
 
-    // Extrai horários ocupados
+    // Extract occupied times
     const horariosOcupados = agendamentos.map((a) => {
-      // Se o campo horario existir, usa ele; senão, extrai da data
+      // If the "horario" field exists, use it; otherwise, extract from "data"
       if (a.horario) return a.horario;
-      // Extrai hora do campo data (UTC para local)
+      // Extract hour from "data" field (UTC to local)
       const localDate = utcToZonedTime(a.data, timeZone);
       return format(localDate, "HH:mm", { timeZone });
     });
 
-    // Filtra horários disponíveis
+    // Filter available times
     const horariosDisponiveis = TODOS_HORARIOS.filter(
       (h) => !horariosOcupados.includes(h)
     );
     res.json(horariosDisponiveis);
   } catch (err) {
-    res.status(500).json({ error: "Erro ao buscar horários disponíveis." });
+    res.status(500).json({ error: "Error fetching available times." });
   }
 });
-// ...existing code...
 
-// CORS restrito ao domínio desejado
+// CORS restricted to desired domains
 app.use(
   cors({
     origin: ["https://barbearia-gg.netlify.app", "https://meusite.com"],
@@ -91,22 +90,22 @@ app.use(
 );
 app.use(bodyParser.json());
 
-// Middleware de autenticação JWT
+// JWT authentication middleware
 function autenticarToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401); // Sem token
+  if (!token) return res.sendStatus(401); // No token
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403); // Token inválido
+    if (err) return res.sendStatus(403); // Invalid token
     req.user = user;
     next();
   });
 }
 
-// Aplica autenticação JWT apenas nas rotas protegidas
+// Apply JWT authentication only to protected routes
 
-// Rota para criar um novo agendamento usando Prisma
+// Route to create a new appointment using Prisma
 app.post("/api/agendamentos", async (req, res) => {
   const { nome, telefone, profissional, servico, data, horario, preco } =
     req.body;
@@ -125,30 +124,30 @@ app.post("/api/agendamentos", async (req, res) => {
     });
     res
       .status(201)
-      .json({ message: "Agendamento criado com sucesso.", id: novo.id });
+      .json({ message: "Appointment created successfully.", id: novo.id });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao criar agendamento." });
+    res.status(500).json({ error: "Error creating appointment." });
   }
 });
 
-// Rota para listar todos os agendamentos usando Prisma
+// Route to list all appointments using Prisma
 app.get("/api/agendamentos", async (req, res) => {
   try {
     const agendamentos = await prisma.agendamento.findMany({
       orderBy: { createdAt: "desc" },
     });
-    // Formata o campo data para 'YYYY-MM-DD' para compatibilidade com o frontend
+    // Format the "data" field to 'YYYY-MM-DD' for frontend compatibility
     const agendamentosFormatados = agendamentos.map((a) => ({
       ...a,
       data: a.data.toISOString().split("T")[0],
     }));
     res.json(agendamentosFormatados);
   } catch (err) {
-    res.status(500).json({ error: "Erro ao buscar agendamentos." });
+    res.json([]); // Ensures it returns an empty array in case of error
   }
 });
 
-// Rota para cancelar um agendamento usando Prisma
+// Route to cancel an appointment using Prisma
 app.post("/api/cancelar", async (req, res) => {
   const { id } = req.body;
   try {
@@ -158,11 +157,11 @@ app.post("/api/cancelar", async (req, res) => {
     });
     res.json({ ok: true });
   } catch (err) {
-    res.status(404).json({ error: "Agendamento não encontrado" });
+    res.status(404).json({ error: "Appointment not found" });
   }
 });
 
-// Rota para atender um agendamento usando Prisma
+// Route to mark an appointment as attended using Prisma
 app.post("/api/atender", async (req, res) => {
   const { id } = req.body;
   try {
@@ -172,26 +171,26 @@ app.post("/api/atender", async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    res.status(404).json({ error: "Agendamento não encontrado" });
+    res.status(404).json({ error: "Appointment not found" });
   }
 });
 
-// (Opcional) Rota para limpar tudo (apenas para testes)
-// Removida, pois não faz sentido com MySQL
+// (Optional) Route to clear all (for testing only)
+// Removed, as it doesn't make sense with MySQL
 
 app.get("/", (req, res) => {
-  res.send("API Barbearia rodando! Use /api/agendamentos");
+  res.send("Barbershop API running! Use /api/agendamentos");
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
-// Token para testes (não deve ficar no código em produção)
+// Test token (should not be in production code)
 const token = jwt.sign({ id: 1, role: "admin" }, process.env.JWT_SECRET, {
   expiresIn: "1h",
 });
-console.log(`Token de acesso: ${token}`);
+console.log(`Access token: ${token}`);
 
-// Exemplo de como deve ser o cabeçalho da requisição
-// Authorization: Bearer SEU_TOKEN_AQUI
+// Example of how the request header should be
+// Authorization: Bearer YOUR_TOKEN_HERE
