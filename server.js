@@ -1,5 +1,5 @@
 // Rota para consultar horários disponíveis de um dia
-require("dotenv" ).config();
+require("dotenv").config();
 const express = require("express");
 const { PrismaClient } = require("./generated/prisma");
 const prisma = new PrismaClient();
@@ -79,14 +79,7 @@ app.get("/api/horarios-disponiveis", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar horários disponíveis." });
   }
 });
-require("dotenv").config();
-const express = require("express");
-const { PrismaClient } = require("./generated/prisma");
-// Removido prisma duplicado
-const cors = require("cors");
-const bodyParser = require("body-parser");
-// Removido DB_FILE, não usamos mais db.json
-// Duplicate definitions removed
+// ...existing code...
 
 // CORS restrito ao domínio desejado
 app.use(
