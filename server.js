@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
-const pool = require("./backend/db/mysql");
+const { PrismaClient } = require('./generated/prisma');
+const prisma = new PrismaClient();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
@@ -33,72 +34,63 @@ function autenticarToken(req, res, next) {
 
 // Aplica autenticação JWT apenas nas rotas protegidas
 
-// Rota para criar um novo agendamento usando MySQL
+// Rota para criar um novo agendamento usando Prisma
 app.post("/api/agendamentos", async (req, res) => {
   const { nome, telefone, profissional, servico, data, horario, preco } = req.body;
   try {
-    const [result] = await pool.query(
-      `INSERT INTO agendamentos (nome, telefone, profissional, servico, data, horario, preco, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
+    const novo = await prisma.agendamento.create({
+      data: {
         nome,
         telefone,
         profissional,
         servico,
-        data,
+        data: new Date(data),
         horario,
-        preco,
-        "confirmado"
-      ]
-    );
-    res.status(201).json({ message: "Agendamento criado com sucesso.", id: result.insertId });
+        preco: parseFloat(preco),
+        status: "confirmado"
+      }
+    });
+    res.status(201).json({ message: "Agendamento criado com sucesso.", id: novo.id });
   } catch (err) {
     res.status(500).json({ error: "Erro ao criar agendamento." });
   }
 });
 
-// Rota para listar todos os agendamentos
+// Rota para listar todos os agendamentos usando Prisma
 app.get("/api/agendamentos", async (req, res) => {
   try {
-    const [agendamentos] = await pool.query("SELECT * FROM agendamentos ORDER BY createdAt DESC");
+    const agendamentos = await prisma.agendamento.findMany({ orderBy: { createdAt: 'desc' } });
     res.json(agendamentos);
   } catch (err) {
     res.status(500).json({ error: "Erro ao buscar agendamentos." });
   }
 });
 
-// Rota para cancelar um agendamento
+// Rota para cancelar um agendamento usando Prisma
 app.post("/api/cancelar", async (req, res) => {
   const { id } = req.body;
   try {
-    const [result] = await pool.query(
-      "UPDATE agendamentos SET status = 'cancelado' WHERE id = ?",
-      [id]
-    );
-    if (result.affectedRows > 0) {
-      res.json({ ok: true });
-    } else {
-      res.status(404).json({ error: "Agendamento não encontrado" });
-    }
+    const agendamento = await prisma.agendamento.update({
+      where: { id: Number(id) },
+      data: { status: 'cancelado' }
+    });
+    res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao cancelar agendamento." });
+    res.status(404).json({ error: "Agendamento não encontrado" });
   }
 });
 
-// Rota para atender um agendamento
+// Rota para atender um agendamento usando Prisma
 app.post("/api/atender", async (req, res) => {
   const { id } = req.body;
   try {
-    const [result] = await pool.query(
-      "UPDATE agendamentos SET status = 'completed' WHERE id = ?",
-      [id]
-    );
-    if (result.affectedRows > 0) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: "Agendamento não encontrado" });
-    }
+    const agendamento = await prisma.agendamento.update({
+      where: { id: Number(id) },
+      data: { status: 'completed' }
+    });
+    res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao atender agendamento." });
+    res.status(404).json({ error: "Agendamento não encontrado" });
   }
 });
 
