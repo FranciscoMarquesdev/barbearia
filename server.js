@@ -11,7 +11,7 @@ const DB_FILE = "./db.json";
 // CORS restrito ao domínio desejado
 app.use(
   cors({
-    origin: "https://barbearia-gg.netlify.app",
+    origin: ["https://barbearia-gg.netlify.app", "https://meusite.com"],
     methods: ["GET", "POST"],
     credentials: true,
   })
