@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_FILE = "./db.json";
+// Removido DB_FILE, não usamos mais db.json
 
 // CORS restrito ao domínio desejado
 app.use(
@@ -33,18 +33,27 @@ function autenticarToken(req, res, next) {
 
 // Aplica autenticação JWT apenas nas rotas protegidas
 
-// Rota para criar um novo agendamento
-app.post("/api/agendamentos", (req, res) => {
-  const db = readDB();
-  const novo = {
-    ...req.body,
-    id: Date.now(),
-    status: "confirmado",
-    createdAt: new Date(),
-  };
-  db.agendamentos.push(novo);
-  writeDB(db);
-  res.status(201).json(novo);
+// Rota para criar um novo agendamento usando MySQL
+app.post("/api/agendamentos", async (req, res) => {
+  const { nome, telefone, profissional, servico, data, horario, preco } = req.body;
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO agendamentos (nome, telefone, profissional, servico, data, horario, preco, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        nome,
+        telefone,
+        profissional,
+        servico,
+        data,
+        horario,
+        preco,
+        "confirmado"
+      ]
+    );
+    res.status(201).json({ message: "Agendamento criado com sucesso.", id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao criar agendamento." });
+  }
 });
 
 // Rota para listar todos os agendamentos
@@ -94,10 +103,7 @@ app.post("/api/atender", async (req, res) => {
 });
 
 // (Opcional) Rota para limpar tudo (apenas para testes)
-app.post("/api/reset", (req, res) => {
-  writeDB({ agendamentos: [] });
-  res.json({ ok: true });
-});
+// Removida, pois não faz sentido com MySQL
 
 app.get("/", (req, res) => {
   res.send("API Barbearia rodando! Use /api/agendamentos");
